@@ -1,4 +1,4 @@
 import { setupWorker } from "msw/browser";
-import mswHandlers from ".";
+import mswHandlers from "../handlers";
 
 export const mockInBrowser = setupWorker(...mswHandlers);

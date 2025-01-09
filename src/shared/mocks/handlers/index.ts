@@ -1,4 +1,4 @@
-import { contentsHandlers } from "./handlers/contents";
+import { contentsHandlers } from "./contents";
 
 const mswHandlers = [...contentsHandlers];
 

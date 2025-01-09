@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 
-import MswWrapper from "@/shared/mocks/msw-wrapper";
+import MswClientProvider from "@/shared/mocks/client/msw-client-provider";
 
 const Contents = () => {
   const [contents, setContents] = useState([]);
@@ -36,9 +36,9 @@ const ClientSideMockPage = () => {
     <main>
       <h1>클라이언트 사이드 API Mocking 테스트</h1>
 
-      <MswWrapper>
+      <MswClientProvider>
         <Contents />
-      </MswWrapper>
+      </MswClientProvider>
 
       <Link href="/">Go Back</Link>
     </main>

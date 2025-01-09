@@ -1,14 +1,12 @@
 import { PropsWithChildren, useEffect, useState } from "react";
-import { mockBrowser } from "./mock-browser";
+import { mockClient } from "./mock-client";
 
-type MswWrapperProps = PropsWithChildren;
-
-const MswWrapper = ({ children }: MswWrapperProps) => {
+const MswClientProvider = ({ children }: PropsWithChildren) => {
   const [isMswEnable, setIsMswEnable] = useState(false);
 
   useEffect(() => {
     const init = async () => {
-      await mockBrowser();
+      await mockClient();
       setIsMswEnable(true);
     };
 
@@ -20,4 +18,4 @@ const MswWrapper = ({ children }: MswWrapperProps) => {
   return isMswEnable ? children : null;
 };
 
-export default MswWrapper;
+export default MswClientProvider;
