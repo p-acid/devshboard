@@ -6,7 +6,10 @@
 >
 > 환경설정에 확장 프로그램은 **VSCode** 기준으로 작성되었습니다.
 
-- 유닛 테스트를 진행하기 위해 활용될 라이브러리인 `vitest` 와 E2E 테스트를 위한 `playwright` 에 관련된 환경설정을 진행합니다.
+- 환경설정을 진행할 패키지는 다음과 같습니다.
+  - 유닛 테스트를 진행하기 위해 활용될 라이브러리 `vitest`
+  - E2E 테스트를 위한 `playwright`
+  - API 모킹을 위한 `msw`
 - 자세한 내용은 [환경설정 커밋](https://github.com/p-acid/nextjs-tdd/commit/5fe096c5b87c7f490072093dd5cfc714d595e971)을 참고해주세요.
 
 1. 패키지 설치 및 초기 설정
@@ -23,6 +26,9 @@ npm install -D vitest @vitejs/plugin-react jsdom @testing-library/react @testing
 
 # playwright
 npm init playwright
+
+# msw
+npm install -D msw@latest
 ```
 
 - 이후 `vitest` 초기 설정을 위해 루트 경로의 `vitest.config.mts` 파일을 참고하여 동일한 위치에 추가해주세요.
@@ -72,3 +78,76 @@ test("should navigate to the about page", async ({ page }) => {
   await expect(page.locator("h1")).toContainText("About");
 });
 ```
+
+### MSW 환경설정
+
+MSW는 비교적 추가 작업이 많아 별도로 설명을 진행합니다.
+
+> [!IMPORTANT]
+>
+> 앞에서 패키지 설치를 안했다면 `msw` 패키지 설치를 진행해주세요. 이하 과정은 패키지 설치가 진행되었다고 가정한 프로세스입니다.
+
+MSW는 브라우저 환경과 노드 환경을 모킹하는 두 가지 모두를 지원한다. Next.js의 경우 각 모킹 환경은 아래와 같은 상황에 활용된다.
+
+- **브라우저 환경(`setupWorker`)**: 클라이언트 사이드 실행 환경
+- **노드 환경(`setupServer`)**: 서버 사이드, 테스트 코드 실행 환경
+
+두 가지 모두 공통으로 핸들러를 정의하여 활용하기에 우선 핸들러 코드를 작성해준다.
+
+```ts
+// __tests__/mocks/handlers/contents.ts
+
+import { http, HttpResponse } from "msw";
+
+export const contentsHandlers = [
+  http.get("http://localhost:4000/contents", () => {
+    return HttpResponse.json([
+      {
+        id: "c7b3d8e0-5e0b-4b0f-8b3a-3b9f4b3d3b3d",
+        title: "Getting started",
+        description: "Three steps to get started with Mock Service Worker.",
+      },
+    ]);
+  }),
+];
+```
+
+```ts
+// __tests__/mocks/handlers/index.ts
+
+import { contentsHandlers } from "./handlers/contents";
+
+const mswHandlers = [...contentsHandlers];
+
+export default mswHandlers;
+```
+
+해당 핸들러를 활용하여 모킹 함수를 작성한다.
+
+```ts
+// __tests__/mocks/mock-in-browser.ts
+import { setupWorker } from "msw/browser";
+import mswHandlers from ".";
+
+export const mockInBrowser = setupWorker(...mswHandlers);
+```
+
+```ts
+// __tests__/mocks/mock-server.ts
+
+import { setupServer } from "msw/node";
+import mswHandlers from ".";
+
+export const mockServer = setupServer(...mswHandlers);
+```
+
+각각 다음의 파일을 통해 모킹 환경의 동작 프로세스를 확인할 수 있다.
+
+- 테스트 코드
+  - `playground/msw-spec.ts`
+- 서버 사이드
+  - `@/app/mock/server/page.tsx` (모킹된 환경에서 Fetching)
+  - `@/app/layout.tsx` (서버 모킹 함수 실행)
+- 클라이언트 사이드
+  - `@/app/mock/client/page.tsx` (모킹된 환경에서 Fetching)
+  - `@/shared/mocks/msw-wrapper.tsx` (모킹된 환경을 만드는 래퍼 컴포넌트)

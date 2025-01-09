@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-export default function Home() {
+export default async function Home() {
   return (
     <main className="flex flex-col items-center gap-2">
       <header className="py-10">
@@ -12,6 +12,8 @@ export default function Home() {
         </h1>
       </header>
       <Link href="/about">About</Link>
+      <Link href="/mock/client">Client-Side Mocking</Link>
+      <Link href="/mock/server">Server-Side Mocking</Link>
     </main>
   );
 }
